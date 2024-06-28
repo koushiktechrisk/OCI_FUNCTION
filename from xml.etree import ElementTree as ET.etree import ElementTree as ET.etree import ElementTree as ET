@@ -1,0 +1,53 @@
+from xml.etree import ElementTree as ET
+
+def append_task_with_annotation(xml_file, task_id, task_name, annotation_text):
+  """Appends a task with text annotation as a child node to a process in BPMN XML.
+
+  Args:
+    xml_file: Path to the BPMN XML file.
+    task_id: ID attribute value for the new task element.
+    task_name: Name for the new task element.
+    annotation_text: Text content for the annotation within the task.
+  """
+  # Parse the XML file
+  tree = ET.parse(xml_file)
+  root = tree.getroot()
+
+  # Find the process element
+  process_element = None
+  for child in root:
+    if child.tag == "{http://www.omg.org/spec/BPMN/20100524/MODEL}process":
+      process_element = child
+      break
+
+  if process_element is None:
+    raise ValueError("Process element not found in BPMN XML")
+
+  # Create the task element
+  task_element = ET.Element("{http://www.omg.org/spec/BPMN/20100524/MODEL}task", id=task_id, name=task_name)
+
+  # Create the text annotation element
+  annotation_element = ET.Element("{http://www.omg.org/spec/BPMN/20100524/MODEL}textAnnotation", id="TextAnnotation_" + task_id)
+  text_node = ET.SubElement(annotation_element, "{http://www.omg.org/spec/BPMN/20100524/MODEL}text")
+  text_node.text = annotation_text
+
+  # Create the association element (optional, modify if needed)
+  association_element = ET.Element("{http://www.omg.org/spec/BPMN/20100524/MODEL}association", 
+                                    sourceRef=task_id, targetRef="TextAnnotation_" + task_id)
+
+  # Append elements
+  task_element.append(annotation_element)
+  process_element.append(task_element)
+  process_element.append(association_element)  # Add association element if needed
+
+  # Write the modified XML to a file
+  tree.write("modified_bpmn.xml")
+
+# Example usage
+xml_file = "your_bpmn_file.xml"
+task_id = "Activity_1hfcf9r"
+task_name = "ABCD"
+annotation_text = "ABCD is not required"
+
+append_task_with_annotation(xml_file, task_id, task_name, annotation_text)
+print("Child node appended successfully!")
